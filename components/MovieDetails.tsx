@@ -47,7 +47,7 @@ const MovieDetails: React.FC = () => {
   }
 
   return (
-    <div className="relative pt-24 min-h-screen">
+    <div className="relative pt-40 md:pt-24 min-h-screen">
       <div className="absolute inset-0 -z-10 h-[700px]">
         {/* Backdrop Image */}
         <div className="absolute inset-0 bg-cover bg-center opacity-30 blur-xl" style={{ backgroundImage: `url(${movie.heroUrl})` }}></div>

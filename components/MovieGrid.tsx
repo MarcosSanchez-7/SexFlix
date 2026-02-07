@@ -11,7 +11,7 @@ interface MovieGridProps {
 
 const MovieGrid: React.FC<MovieGridProps> = ({ title, movies, onMovieClick }) => {
   return (
-    <div className="pt-24 px-6 md:px-12 pb-12">
+    <div className="pt-40 md:pt-24 px-4 md:px-12 pb-12 w-full max-w-full overflow-x-hidden">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-bold">{title}</h2>
         <div className="flex gap-4">
@@ -26,7 +26,7 @@ const MovieGrid: React.FC<MovieGridProps> = ({ title, movies, onMovieClick }) =>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
         {movies.map((movie) => (
           <MovieCard key={movie.id} movie={movie} onClick={onMovieClick} />
         ))}
