@@ -166,7 +166,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView, onSearch }) => {
           <div className="flex items-center bg-zinc-900/80 border border-zinc-700 rounded-lg px-3 py-2 md:py-1.5 focus-within:border-primary transition-all">
             <span className="material-symbols-outlined text-gray-400 text-xl">search</span>
             <input
-              className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-gray-500 text-white ml-2"
+              className="bg-transparent border-none focus:ring-0 text-base md:text-sm w-full placeholder:text-gray-500 text-white ml-2"
               placeholder={t.nav.searchPlaceholder}
               type="text"
               value={searchValue}

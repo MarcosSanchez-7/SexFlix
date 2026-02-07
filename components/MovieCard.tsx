@@ -9,13 +9,13 @@ interface MovieCardProps {
 
 const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
   return (
-    <div 
-      className="min-w-[200px] md:min-w-[240px] aspect-[2/3] relative rounded-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:z-10 cursor-pointer shadow-lg group"
+    <div
+      className="w-full aspect-[2/3] relative rounded-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:z-10 cursor-pointer shadow-lg group"
       onClick={() => onClick(movie)}
     >
-      <img 
-        className="w-full h-full object-cover rounded-lg" 
-        src={movie.posterUrl} 
+      <img
+        className="w-full h-full object-cover rounded-lg"
+        src={movie.posterUrl}
         alt={movie.title}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
