@@ -106,7 +106,7 @@ const MovieComments: React.FC<MovieCommentsProps> = ({ movieId }) => {
                 Discussion ({isLoading ? '...' : comments.length})
             </h3>
 
-            {/* Comment Form */}
+            {/* Comment Form - Protección Granular de Autenticación */}
             {isAuthenticated ? (
                 <form onSubmit={handleSubmit} className="mb-10 bg-zinc-900/50 p-6 rounded-lg border border-zinc-800">
                     <label htmlFor="comment" className="block text-sm font-medium text-gray-300 mb-2">
@@ -131,9 +131,50 @@ const MovieComments: React.FC<MovieCommentsProps> = ({ movieId }) => {
                     </div>
                 </form>
             ) : (
-                <div className="mb-10 p-6 bg-zinc-900/50 rounded-lg border border-zinc-800 text-center">
-                    <p className="text-gray-400 mb-2">Join the conversation</p>
-                    <p className="text-white font-medium">Please log in to leave a comment.</p>
+                /**
+                 * UI para Usuarios No Autenticados
+                 * 
+                 * DISEÑO:
+                 * - Mensaje claro y amigable
+                 * - Botón prominente que redirija al login
+                 * - Mantiene el contexto (puede volver después de login)
+                 * 
+                 * EXPERIENCIA:
+                 * - No bloquea la visualización del contenido
+                 * - Invita a la acción sin ser intrusivo
+                 * - Preserva la ubicación actual para retorno post-login
+                 */
+                <div className="mb-10 p-8 bg-gradient-to-br from-zinc-900/80 to-zinc-900/50 rounded-lg border border-zinc-800 text-center backdrop-blur-sm">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/30">
+                            <span className="material-symbols-outlined text-primary text-3xl">chat</span>
+                        </div>
+                        <div>
+                            <h4 className="text-xl font-bold text-white mb-2">Join the Discussion</h4>
+                            <p className="text-gray-400 mb-4 max-w-md mx-auto">
+                                Sign in to share your thoughts and connect with other movie enthusiasts
+                            </p>
+                        </div>
+                        <a
+                            href="/login"
+                            className="
+                                bg-primary hover:bg-red-700 
+                                text-white font-bold 
+                                px-8 py-3 rounded-lg 
+                                transition-all 
+                                shadow-lg shadow-primary/20 
+                                hover:shadow-primary/40
+                                hover:scale-105
+                                inline-flex items-center gap-2
+                            "
+                        >
+                            <span className="material-symbols-outlined text-sm">login</span>
+                            Sign In to Comment
+                        </a>
+                        <p className="text-xs text-gray-500 mt-2">
+                            Don't have an account? <a href="/login" className="text-primary hover:underline">Create one now</a>
+                        </p>
+                    </div>
                 </div>
             )}
 

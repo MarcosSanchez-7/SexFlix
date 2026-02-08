@@ -129,7 +129,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView, onSearch }) => {
             )}
           </div>
 
-          {/* Profile */}
+          {/* Profile - Condicional según estado de autenticación */}
           <div className="relative group">
             <div className="flex items-center gap-2 cursor-pointer">
               <div className="w-8 h-8 rounded bg-primary overflow-hidden">
@@ -142,21 +142,43 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView, onSearch }) => {
               <span className="material-symbols-outlined text-sm transition-transform group-hover:rotate-180">arrow_drop_down</span>
             </div>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown Menu - Diferente según autenticación */}
             <div className="absolute right-0 top-full mt-2 w-48 bg-black/90 border border-white/10 rounded shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div className="py-2 px-4 border-b border-white/10 text-xs text-gray-400">
-                {t.nav.hello}, {user?.username || t.nav.guest}
-              </div>
-              <ul className="py-2">
-                <li className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm">Account</li>
-                <li className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm">Help Center</li>
-                <li
-                  className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm border-t border-white/10 mt-2"
-                  onClick={() => logout()}
-                >
-                  {t.nav.signOut}
-                </li>
-              </ul>
+              {user ? (
+                // Usuario autenticado
+                <>
+                  <div className="py-2 px-4 border-b border-white/10 text-xs text-gray-400">
+                    {t.nav.hello}, {user.username}
+                  </div>
+                  <ul className="py-2">
+                    <li className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm">Account</li>
+                    <li className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm">Help Center</li>
+                    <li
+                      className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm border-t border-white/10 mt-2"
+                      onClick={() => logout()}
+                    >
+                      {t.nav.signOut}
+                    </li>
+                  </ul>
+                </>
+              ) : (
+                // Usuario NO autenticado
+                <>
+                  <div className="py-2 px-4 border-b border-white/10 text-xs text-gray-400">
+                    {t.nav.hello}, {t.nav.guest}
+                  </div>
+                  <ul className="py-2">
+                    <li
+                      className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm flex items-center gap-2"
+                      onClick={() => navigate('/login')}
+                    >
+                      <span className="material-symbols-outlined text-sm">login</span>
+                      Sign In
+                    </li>
+                    <li className="px-4 py-2 hover:bg-white/10 cursor-pointer text-sm">Help Center</li>
+                  </ul>
+                </>
+              )}
             </div>
           </div>
         </div>

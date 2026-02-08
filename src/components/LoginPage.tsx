@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const LoginPage: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -8,7 +8,19 @@ const LoginPage: React.FC = () => {
     const [error, setError] = useState('');
     const { login, isLoading } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
+    /**
+     * Manejo de Login con Redirección Inteligente
+     * 
+     * LÓGICA:
+     * - Si el usuario vino desde otra página (ej: /movie/123), vuelve allí
+     * - Si accedió directamente a /login, va al home
+     * 
+     * BENEFICIO:
+     * - Mejor UX: El usuario continúa donde estaba
+     * - Conversión: Reduce fricción en el flujo de comentarios
+     */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -20,7 +32,10 @@ const LoginPage: React.FC = () => {
 
         try {
             await login(username, email);
-            navigate('/'); // Redirect to home on success
+
+            // Redirigir a la página de origen o al home
+            const from = (location.state as any)?.from?.pathname || '/';
+            navigate(from, { replace: true });
         } catch (err) {
             setError('Login failed. Please try again.');
         }

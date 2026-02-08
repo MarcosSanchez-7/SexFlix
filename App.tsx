@@ -17,13 +17,47 @@ import ProtectedRoute from './src/components/ProtectedRoute';
 
 // Extracted Home Component
 import Pagination from './src/components/Pagination';
+import PageSizeSelector from './src/components/PageSizeSelector';
 
 // Extracted Home Component
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
+
+  /**
+   * Estado para el tamaño de página (limit).
+   * Valor inicial: 10 elementos por página.
+   * Opciones disponibles: 5, 10, 20, 50
+   */
+  const [limit, setLimit] = useState(10);
+
   const { data, isLoading, isError } = usePopularMovies(page);
   const { t } = useLanguage();
+
+  /**
+   * Handler para cambio de tamaño de página.
+   * 
+   * IMPORTANTE: Cuando el usuario cambia el tamaño de página (limit),
+   * debemos resetear la página actual a 1. Esto es crucial porque:
+   * 
+   * 1. Evita peticiones a offsets inexistentes
+   *    - Si estábamos en página 5 con limit=10 (offset=40)
+   *    - Y cambiamos a limit=50, la página 5 tendría offset=200
+   *    - Esto podría exceder el total de resultados disponibles
+   * 
+   * 2. Mejora la experiencia de usuario
+   *    - El usuario espera ver los primeros resultados con el nuevo tamaño
+   *    - Evita confusión al mostrar resultados de páginas intermedias
+   * 
+   * Fórmula de cálculo:
+   * - skip (offset) = (page - 1) * limit
+   * - Ejemplo: página 3 con limit 10 → skip = (3-1) * 10 = 20
+   */
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1); // ← RESETEO CRÍTICO: Volver a la primera página
+    window.scrollTo(0, 0);
+  };
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -51,17 +85,34 @@ const Home: React.FC = () => {
 
   if (isError) return <div className="pt-24 text-center">Error loading popular movies</div>;
 
-  const validMovies = data?.results || [];
+  /**
+   * Procesamiento de películas con el limit aplicado.
+   * 
+   * NOTA TÉCNICA: TMDB API siempre devuelve 20 resultados por página.
+   * Para simular diferentes tamaños de página, filtramos los resultados
+   * en el cliente usando slice(0, limit).
+   * 
+   * En una API que soporte limit nativo (como DummyJSON), la URL sería:
+   * https://dummyjson.com/posts?limit=${limit}&skip=${(page - 1) * limit}
+   */
+  const allMovies = data?.results || [];
+  const validMovies = allMovies.slice(0, limit);
   const heroMovie = validMovies[0];
-  const trendingMovies = validMovies.slice(0, 10);
-  const newReleases = validMovies.slice(5, 15);
-  const myList = validMovies.slice(10, 20);
 
   return (
     <main className="relative">
       {heroMovie && <Hero movie={heroMovie} onMoreInfo={(m) => navigate(`/movie/${m.id}`)} />}
 
       <div className="relative z-10 space-y-12 -mt-16 pb-20 px-6 md:px-12">
+        {/* Selector de tamaño de página - Ubicado antes del listado */}
+        <div className="flex justify-end items-center pt-4">
+          <PageSizeSelector
+            currentSize={limit}
+            onSizeChange={handleLimitChange}
+            options={[5, 10, 20, 50]}
+          />
+        </div>
+
         <MovieGrid
           title={t.sections.trending}
           movies={validMovies}
@@ -69,7 +120,12 @@ const Home: React.FC = () => {
         />
 
         {data && (
-          <div className="mt-8">
+          <div className="mt-8 space-y-4">
+            {/* Información de resultados mostrados */}
+            <div className="text-center text-sm text-gray-400">
+              Showing {validMovies.length} of {allMovies.length} movies on this page
+            </div>
+
             <Pagination
               currentPage={page}
               totalPages={data.totalPages}
@@ -89,6 +145,7 @@ const Search: React.FC = () => {
   const q = new URLSearchParams(location.search).get('q') || '';
   const { t } = useLanguage();
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   // Reset page when query changes
   React.useEffect(() => {
@@ -96,6 +153,12 @@ const Search: React.FC = () => {
   }, [q]);
 
   const { data, isLoading, isError } = useSearchMovies(q, page);
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
+    window.scrollTo(0, 0);
+  };
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -105,15 +168,33 @@ const Search: React.FC = () => {
   if (isLoading) return <MovieGridSkeleton count={10} />;
   if (isError) return <div className="pt-24 text-center">Error searching movies</div>;
 
+  const allMovies = data?.results || [];
+  const validMovies = allMovies.slice(0, limit);
+
   return (
     <div className="flex flex-col min-h-screen">
+      <div className="px-6 md:px-12 pt-24">
+        {/* Selector de tamaño de página */}
+        <div className="flex justify-end items-center pb-4">
+          <PageSizeSelector
+            currentSize={limit}
+            onSizeChange={handleLimitChange}
+            options={[5, 10, 20, 50]}
+          />
+        </div>
+      </div>
+
       <MovieGrid
         title={q ? `${t.sections.resultsFor} "${q}"` : t.sections.browseGallery}
-        movies={data?.results || []}
+        movies={validMovies}
         onMovieClick={(m) => navigate(`/movie/${m.id}`)}
       />
       {data && (
-        <div className="pb-20">
+        <div className="pb-20 space-y-4">
+          <div className="text-center text-sm text-gray-400">
+            Showing {validMovies.length} of {allMovies.length} movies on this page
+          </div>
+
           <Pagination
             currentPage={page}
             totalPages={data.totalPages}
@@ -198,36 +279,73 @@ const AuthenticatedLayout: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
+/**
+ * App Component - Refactorizado para Acceso Público
+ * 
+ * CAMBIOS DE ARQUITECTURA:
+ * - Las rutas principales (/, /search, /movie/:id) son ahora PÚBLICAS
+ * - No requieren autenticación para visualizar contenido
+ * - La autenticación solo es necesaria para:
+ *   1. Gestión de comentarios (crear, editar, eliminar)
+ *   2. Acciones de usuario (likes, favoritos)
+ *   3. Futuras rutas de perfil/admin
+ * 
+ * BENEFICIOS:
+ * - Mejor SEO (contenido indexable)
+ * - Experiencia de usuario mejorada (exploración sin fricción)
+ * - Conversión gradual (usuarios pueden explorar antes de registrarse)
+ */
 const App: React.FC = () => {
   return (
     <LanguageProvider>
       <AuthProvider>
         <Routes>
+          {/* Ruta de Login - Pública */}
           <Route path="/login" element={<LoginPage />} />
 
+          {/* 
+            RUTAS PÚBLICAS - Accesibles sin autenticación
+            El estado de autenticación se maneja a nivel de componente
+            para funcionalidades específicas (comentarios, likes, etc.)
+          */}
           <Route path="/" element={
-            <ProtectedRoute>
-              <AuthenticatedLayout>
-                <Home />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
+            <AuthenticatedLayout>
+              <Home />
+            </AuthenticatedLayout>
           } />
 
           <Route path="/search" element={
-            <ProtectedRoute>
-              <AuthenticatedLayout>
-                <Search />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
+            <AuthenticatedLayout>
+              <Search />
+            </AuthenticatedLayout>
           } />
 
           <Route path="/movie/:id" element={
-            <ProtectedRoute>
-              <AuthenticatedLayout>
-                <MovieDetailsWrapper />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
+            <AuthenticatedLayout>
+              <MovieDetailsWrapper />
+            </AuthenticatedLayout>
           } />
+
+          {/* 
+            RUTAS PROTEGIDAS (Ejemplo para futuras implementaciones)
+            Descomenta cuando implementes estas funcionalidades:
+            
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <AuthenticatedLayout>
+                  <UserProfile />
+                </AuthenticatedLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AuthenticatedLayout>
+                  <AdminDashboard />
+                </AuthenticatedLayout>
+              </ProtectedRoute>
+            } />
+          */}
         </Routes>
       </AuthProvider>
     </LanguageProvider>
